@@ -461,8 +461,8 @@ ${ex([
   ['Pomažem prijatelju.', 'Ich helfe einem Freund.'],
 ])}
 <p>Viel wichtiger als die Substantive sind die <b>kurzen Dativ-Pronomen</b> – sie stecken in vielen Alltagswendungen:</p>
-${tbl(['mir', 'dir', 'ihm', 'ihr', 'uns', 'euch / Ihnen', 'ihnen'], [
-  ['mi', 'ti', 'mu', 'joj', 'nam', 'vam', 'im'],
+${tbl(['', 'mir', 'dir', 'ihm', 'ihr', 'uns', 'euch / Ihnen', 'ihnen'], [
+  ['Dativ', 'mi', 'ti', 'mu', 'joj', 'nam', 'vam', 'im'],
 ])}
 ${ex([
   ['Sviđa mi se Zagreb.', 'Zagreb gefällt mir.'],
@@ -587,7 +587,7 @@ ${ex([
   ['Jesi li vidio film?', 'Hast du den Film gesehen?'],
   ['Nisam imao vremena.', 'Ich hatte keine Zeit.'],
 ])}
-${tbl(['Infinitiv', 'er', 'sie', ''], [
+${tbl(['Infinitiv', 'er', 'sie', 'sie (mehrere)'], [
   ['ići (gehen)', 'išao', 'išla', 'išli'],
   ['doći (kommen)', 'došao', 'došla', 'došli'],
   ['jesti (essen)', 'jeo', 'jela', 'jeli'],

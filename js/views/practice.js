@@ -29,7 +29,7 @@ export function practice() {
       : h('section', { class: 'card' },
           h('h3', null, learned ? 'Heute ist nichts mehr fällig ✓' : 'Noch keine Wiederholungen'),
           h('p', { class: 'muted' }, learned
-            ? (tomorrow ? `Morgen warten ${tomorrow} ${tomorrow === 1 ? 'Karte' : 'Karten'} auf dich. ` : '') + 'Wenn du magst, kannst du unten frei weiterüben.'
+            ? (tomorrow === 1 ? 'Morgen wartet eine Karte auf dich. ' : tomorrow ? `Morgen warten ${tomorrow} Karten auf dich. ` : '') + 'Wenn du magst, kannst du unten frei weiterüben.'
             : 'Sobald du im Kurs die ersten Wörter gelernt hast, plant die App hier deine Wiederholungen.'),
           !learned && h('a', { class: 'btn primary', href: '#/kurs' }, 'Zum Kurs'),
         ),

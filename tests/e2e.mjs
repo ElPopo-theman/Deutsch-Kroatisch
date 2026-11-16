@@ -234,7 +234,7 @@ const server = spawn(process.execPath, ['tools/serve.mjs'], { env: { ...process.
 await new Promise((r) => setTimeout(r, 600));
 try {
   await run('iphone', { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  await run('desktop', { viewport: { width: 1280, height: 860 }, deviceScaleFactor: 1 });
+  await run('desktop', { viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2 });
 } finally {
   server.kill();
 }
