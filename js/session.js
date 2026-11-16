@@ -12,7 +12,7 @@ const PRAISE = ['Točno!', 'Odlično!', 'Bravo!', 'Super!', 'Tako je!'];
 const GRADED = new Set(['mc', 'type', 'build']);
 const keepKeyboard = (e) => e.preventDefault();
 
-let active = null;
+let active = false;
 
 export const sessionOpen = () => Boolean(active);
 
@@ -56,7 +56,7 @@ export function startSession({ exercises, mode = 'free', title = '', onFinish, a
   root.hidden = false;
   document.body.classList.add('in-session');
   history.pushState({ session: true }, '');
-  active = { requestClose };
+  active = true;
 
   // ----- Ablauf -----
   function show() {
@@ -145,6 +145,8 @@ export function startSession({ exercises, mode = 'free', title = '', onFinish, a
   }
 
   function next() {
+    // Bei Aufgaben ohne Bewertung (neues Wort, Nachsprechen) zählt die Zeit bis zum Weiterblättern.
+    if (!pending) stats.seconds += Math.min(60, (Date.now() - shownAt) / 1000);
     commit();
     pos += 1;
     if (pos >= queue.length) finish();
@@ -212,7 +214,7 @@ export function startSession({ exercises, mode = 'free', title = '', onFinish, a
 
   function close() {
     if (!active) return;
-    active = null;
+    active = false;
     stopSpeaking();
     document.removeEventListener('keydown', onKey);
     window.removeEventListener('popstate', onPop);
@@ -455,8 +457,3 @@ const RENDER = {
     };
   },
 };
-
-/** Schließt eine laufende Sitzung von außen (z. B. beim Seitenwechsel). */
-export function closeSession() {
-  active?.requestClose();
-}

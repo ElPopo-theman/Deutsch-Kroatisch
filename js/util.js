@@ -111,7 +111,3 @@ export function toCyrillic(text) {
     return m[0] === lower[0] ? c : c.toUpperCase();
   });
 }
-
-export function escapeHtml(s) {
-  return String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
-}

@@ -129,6 +129,8 @@ document.addEventListener('visibilitychange', () => {
 render();
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  try {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  } catch { /* in eingebetteten Ansichten nicht erlaubt */ }
 }
 navigator.storage?.persist?.().catch(() => {});

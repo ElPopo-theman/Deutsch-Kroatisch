@@ -126,7 +126,7 @@ async function run(name, contextOptions) {
   await shot('04-geschafft');
   await page.locator('.s-foot .btn.primary').click();
   await page.waitForSelector('#session', { state: 'hidden' });
-  const learned = await page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('bok.state.v1')).cards).length);
+  const learned = await page.evaluate(async () => Object.keys((await import('/js/store.js')).store.cards).length);
   assert.equal(learned, 6, 'sechs neue Wörter sind als Karten angelegt');
   await shot('05-start-danach');
 
@@ -213,6 +213,16 @@ async function run(name, contextOptions) {
   await page.locator('.seg button', { hasText: 'Dunkel' }).click();
   await go('');
   await shot('22-dunkel');
+
+  // Offline: Nach dem ersten Besuch muss die App ohne Netz starten.
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.waitForFunction(async () => (await caches.keys()).length > 0 && (await (await caches.open((await caches.keys())[0])).keys()).length > 20);
+  await context.setOffline(true);
+  await page.reload();
+  await page.waitForSelector('.hero');
+  await page.locator('.tab', { hasText: 'Grammatik' }).click();
+  await page.waitForFunction(() => document.querySelectorAll('.step-card').length === 22); // Grammatik ist offline verfügbar
+  await context.setOffline(false);
 
   assert.deepEqual(errors, [], 'keine Fehler in der Konsole');
   await browser.close();

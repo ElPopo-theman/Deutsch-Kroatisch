@@ -12,6 +12,7 @@ const FAMILIES = { hr: ['hr', 'bs', 'sr'], de: ['de'] };
 
 let voices = [];
 let current = null; // Referenz halten – sonst räumt Safari die Ausgabe weg, bevor „onend“ feuert.
+let warmup = null;  // stumme Ausgabe, die iOS die Sprachausgabe freischalten lässt
 const listeners = new Set();
 
 function refresh() {
@@ -36,6 +37,9 @@ export function initSpeech() {
     try {
       const u = new SpeechSynthesisUtterance(' ');
       u.volume = 0;
+      u.onend = u.onerror = () => { warmup = null; };
+      warmup = u;
+      setTimeout(() => { warmup = null; }, 1500);
       synth.speak(u);
     } catch { /* nicht unterstützt */ }
     refresh();
@@ -121,7 +125,9 @@ export function speak(text, { lang = 'hr', slow = false, interrupt = true, pitch
     const guard = setTimeout(() => finish(false), 5000 + phrase.length * 220);
 
     const start = () => { current = u; synth.speak(u); };
-    if (interrupt && (synth.speaking || synth.pending)) {
+    // Läuft nur die stumme Freischaltung, wird sie nicht abgebrochen: Die erste echte Ausgabe muss
+    // auf dem iPhone unmittelbar aus der Berührung heraus starten.
+    if (interrupt && !warmup && (synth.speaking || synth.pending)) {
       synth.cancel();
       setTimeout(start, 80); // direkt nach cancel() verschlucken einige Browser die nächste Ausgabe
     } else {

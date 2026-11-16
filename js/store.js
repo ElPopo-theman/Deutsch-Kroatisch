@@ -74,9 +74,7 @@ export const store = {
 
   /** Bewertet eine Karte (1–4) und plant die nächste Wiederholung. */
   grade(id, grade) {
-    const isNew = !state.cards[id];
     state.cards[id] = review(state.cards[id], grade, dayNumber(), state.settings.retention);
-    if (isNew && !id.startsWith('g')) this.today().nw = (this.today().nw || 0) + 1;
     save();
     return state.cards[id];
   },
