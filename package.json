@@ -1,0 +1,12 @@
+{
+  "name": "bok-kroatisch-lernen",
+  "version": "1.0.0",
+  "description": "Bok! – Kroatisch, Serbisch und Bosnisch lernen. Web-App für iPhone und Desktop.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "icons": "node tools/make-icons.mjs"
+  }
+}

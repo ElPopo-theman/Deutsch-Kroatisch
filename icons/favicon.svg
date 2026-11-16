@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0b5d8f"/>
+  <path fill="#fff" d="M18 15h28a8 8 0 0 1 8 8v14a8 8 0 0 1-8 8H30l-11 9 2-9h-3a8 8 0 0 1-8-8V23a8 8 0 0 1 8-8z"/>
+  <text x="32" y="39" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Arial, sans-serif" font-weight="900" font-size="22" fill="#0b5d8f">B<tspan fill="#c8502a">!</tspan></text>
+</svg>
