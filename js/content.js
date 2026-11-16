@@ -26,6 +26,8 @@ export const lessonById = new Map();
 export const grammarItemById = new Map();
 
 for (const g of GRAMMAR) {
+  // Endungen wie „-a“ bekommen einen geschützten Bindestrich, damit sie am Zeilenende nicht zerreißen.
+  g.html = g.html.replace(/(^|[\s(>])-(?=[a-zčćđšž])/g, '$1\u2011');
   g.items = g.ex.map((e) => ({ ...e, id: `${g.id}:${e.q || e.hr}`, lesson: g.id }));
   lessonById.set(g.id, g);
   for (const it of g.items) grammarItemById.set(it.id, it);

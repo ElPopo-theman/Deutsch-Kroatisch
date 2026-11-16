@@ -770,7 +770,7 @@ ${tip('<b>„Lass uns …“:</b> <span class="say">Idemo!</span> oder <span cla
       c('___ brinuti! (Verbot, ti)', 'Nemoj', 'Mach dir keine Sorgen!', ['Nemam', 'Neću', 'Nije']),
       c('___ dobar! (biti, ti)', 'Budi', 'Sei brav!', ['Biti', 'Jesi', 'Bio']),
       c('___ puno vode! (piti, ti)', 'Pij', 'Trink viel Wasser!', ['Pije', 'Piti', 'Piješ']),
-      c('___ mi! (pomoći, ti)', 'Pomozi', 'Hilf mir!', ['Pomoći', 'Pomaže', 'Pomogni']),
+      c('___ mi! (pomoći, ti)', 'Pomozi', 'Hilf mir!', ['Pomoći', 'Pomaže', 'Pomogao']),
       c('___ ravno! (ići, vi)', 'Idite', 'Gehen Sie geradeaus!', ['Idi', 'Idete', 'Ići']),
       c('___ mi! (pisati, ti)', 'Piši', 'Schreib mir!', ['Piše', 'Pisati', 'Pišeš']),
       c('___ mi račun, molim. (dati, vi)', 'Dajte', 'Geben Sie mir bitte die Rechnung.', ['Daj', 'Dati', 'Date']),

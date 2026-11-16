@@ -28,8 +28,9 @@ export function more() {
 
 // ---------- Statistik ----------
 /** Säulendiagramm für eine einzelne Zahlenreihe; Werte erscheinen beim Überfahren oder Fokussieren. */
-function columnChart(data, { title, head }) {
+function columnChart(data, { title, head, empty }) {
   const max = Math.max(...data.map((d) => d.value));
+  if (max === 0) return h('figure', { class: 'chart' }, h('figcaption', null, title), h('p', { class: 'muted chart-empty' }, empty));
   const top = Math.max(4, Math.ceil(max / 4) * 4);
   const peak = data.findIndex((d) => d.value === max);
   return h('figure', { class: 'chart' },
@@ -78,8 +79,14 @@ export function stats() {
       tile(s.accuracy == null ? '–' : s.accuracy + ' %', 'richtig (7 Tage)'),
       tile(`${s.lessonsDone}/${lessons.length}`, 'Grammatikthemen'),
     ),
-    h('section', { class: 'card' }, columnChart(act, { title: 'Beantwortete Aufgaben – letzte 14 Tage', head: ['Tag', 'Aufgaben'] })),
-    h('section', { class: 'card' }, columnChart(fc, { title: 'Anstehende Wiederholungen – nächste 7 Tage', head: ['Tag', 'Karten'] })),
+    h('section', { class: 'card' }, columnChart(act, {
+      title: 'Beantwortete Aufgaben – letzte 14 Tage', head: ['Tag', 'Aufgaben'],
+      empty: 'Noch keine Aufgaben beantwortet. Nach deiner ersten Einheit siehst du hier deinen Verlauf.',
+    })),
+    h('section', { class: 'card' }, columnChart(fc, {
+      title: 'Anstehende Wiederholungen – nächste 7 Tage', head: ['Tag', 'Karten'],
+      empty: 'In den nächsten sieben Tagen ist nichts fällig.',
+    })),
     h('section', { class: 'card' },
       h('h3', null, 'Wortschatz nach Lektion'),
       h('ul', { class: 'meters' }, units.map((u, i) => {

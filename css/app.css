@@ -21,6 +21,8 @@
   --bad-soft: #fbe5e2;
   --warn-soft: #fdf1d3;
   --warn-ink: #5f4200;
+  --chart: #0b5d8f;
+  --chart-hover: #084a73;
   --shadow: 0 1px 2px rgba(22, 34, 44, 0.06), 0 4px 16px rgba(22, 34, 44, 0.06);
   --radius: 16px;
   --nav-h: 60px;
@@ -50,6 +52,8 @@
     --bad-soft: #3b1917;
     --warn-soft: #3a2f10;
     --warn-ink: #f3d98a;
+    --chart: #3f9bd6;
+    --chart-hover: #5cb3e8;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 }
@@ -74,6 +78,8 @@
   --bad-soft: #3b1917;
   --warn-soft: #3a2f10;
   --warn-ink: #f3d98a;
+  --chart: #3f9bd6;
+  --chart-hover: #5cb3e8;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -297,7 +303,8 @@ button { touch-action: manipulation; }
   box-shadow: var(--shadow);
 }
 .card.soft { background: var(--surface-2); border: 1px solid var(--line); box-shadow: none; }
-.section-title { margin-top: 6px; }
+.section-title { margin: 6px 0 8px; }
+.page > .section-title { margin-bottom: -6px; }
 .list { display: flex; flex-direction: column; gap: 10px; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .notice {
@@ -620,6 +627,7 @@ select {
 
 .chart { margin: 0; }
 .chart figcaption { margin-bottom: 30px; font-weight: 700; }
+.chart-empty { margin-top: -18px; }
 .chart-plot { position: relative; height: 132px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .chart-top {
   position: absolute;
@@ -634,8 +642,8 @@ select {
 }
 .cols { display: flex; height: 100%; padding-left: 22px; }
 .col { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: flex-end; outline: none; }
-.col i { display: block; width: min(24px, 62%); border-radius: 4px 4px 0 0; background: var(--brand); }
-.col:hover i, .col:focus-visible i { background: var(--brand-strong); }
+.col i { display: block; width: min(24px, 62%); border-radius: 4px 4px 0 0; background: var(--chart); }
+.col:hover i, .col:focus-visible i { background: var(--chart-hover); }
 .col-value { margin-bottom: 3px; color: var(--ink-2); font-size: 0.72rem; font-weight: 700; }
 .col:hover::after, .col:focus-visible::after {
   content: attr(data-tip);
@@ -697,7 +705,7 @@ select {
 .fb-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
 .fb-actions .link { margin-right: auto; text-align: left; }
 .fb-actions .btn { min-width: 140px; }
-.fb-actions.end .btn { flex: 1; }
+.fb-actions.end .btn { flex: 1; min-width: 0; padding-inline: 10px; white-space: nowrap; }
 
 .ex { display: flex; flex-direction: column; gap: 18px; padding-top: 6px; }
 .instruction { color: var(--ink-3); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }

@@ -48,6 +48,18 @@ export function home() {
     speechStatus('hr') === 'no' && h('a', { class: 'notice', href: '#/einstellungen' },
       h('b', null, 'Keine kroatische Stimme gefunden.'), ' Tippe hier, um das Audio einzurichten.'),
 
+    s.due > 0 && h('button', { class: 'cta review', onclick: startReview },
+      h('span', { class: 'cta-icon' }, icon('practice', 26)),
+      h('span', { class: 'cta-text' }, h('b', null, 'Wiederholen'), h('small', null, `${s.due} ${s.due === 1 ? 'Karte ist' : 'Karten sind'} fällig – zuerst festigen, was du kannst`)),
+      icon('chevron', 20),
+    ),
+
+    step && h('button', { class: 'cta learn' + (s.due > 0 ? ' outline' : ''), onclick: () => runStep(step) },
+      h('span', { class: 'cta-icon emoji' }, d.icon),
+      h('span', { class: 'cta-text' }, h('b', null, isNew ? 'Los geht es' : 'Weiterlernen'), h('small', null, `${d.head} – ${d.text}`)),
+      icon('chevron', 20),
+    ),
+
     isNew && h('section', { class: 'card welcome' },
       h('h3', null, 'Dobro došli! So funktioniert es'),
       h('ol', { class: 'steps' },
@@ -59,18 +71,6 @@ export function home() {
         audioButton('Dobro došli! Učimo hrvatski.'),
         h('span', { class: 'muted' }, 'Ton testen – hörst du Kroatisch?'),
       ),
-    ),
-
-    s.due > 0 && h('button', { class: 'cta review', onclick: startReview },
-      h('span', { class: 'cta-icon' }, icon('practice', 26)),
-      h('span', { class: 'cta-text' }, h('b', null, 'Wiederholen'), h('small', null, `${s.due} ${s.due === 1 ? 'Karte ist' : 'Karten sind'} fällig – zuerst festigen, was du kannst`)),
-      icon('chevron', 20),
-    ),
-
-    step && h('button', { class: 'cta learn' + (s.due > 0 ? ' outline' : ''), onclick: () => runStep(step) },
-      h('span', { class: 'cta-icon emoji' }, d.icon),
-      h('span', { class: 'cta-text' }, h('b', null, isNew ? 'Los geht es' : 'Weiterlernen'), h('small', null, `${d.head} – ${d.text}`)),
-      icon('chevron', 20),
     ),
 
     !step && s.due === 0 && h('section', { class: 'card' },

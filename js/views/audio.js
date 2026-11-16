@@ -257,8 +257,8 @@ export function trainer() {
       ], (v) => { source = v; }),
       select('Inhalt', content, [['words', 'Einzelne Wörter'], ['sentences', 'Ganze Sätze']], (v) => { content = v; }),
       select('Ablauf', direction, [
-        ['recall', 'Abrufen: Deutsch → Pause → Kroatisch'],
-        ['repeat', 'Nachsprechen: Kroatisch → Pause → Kroatisch'],
+        ['recall', 'Abrufen (Deutsch zuerst)'],
+        ['repeat', 'Nachsprechen (Kroatisch zuerst)'],
       ], (v) => { direction = v; }),
       select('Pausen', String(pause), [['1', 'kurz'], ['1.5', 'mittel'], ['2.2', 'lang']], (v) => { pause = Number(v); }),
     ),
