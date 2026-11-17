@@ -2,7 +2,8 @@
 
 import { h, dayNumber, formatDay } from '../util.js';
 import { store } from '../store.js';
-import { speak, voicesFor, speechStatus } from '../speech.js';
+import { voicesFor, speechMode, testSpeech, speechDiagnostics, isIOS } from '../speech.js';
+import { VERSION } from '../version.js';
 import { icon, toast, confirmDialog, progressBar } from '../ui.js';
 import { units, lessons, words } from '../content.js';
 import { summaryStats, forecast, activity, unitProgress } from '../learning.js';
@@ -21,7 +22,7 @@ export function more() {
       item('#/methode', 'bulb', 'Lernmethode', 'Was die Forschung über das Sprachenlernen weiß'),
       item('#/einstellungen', 'settings', 'Einstellungen', 'Tagesziel, Audio, Darstellung, Sicherung, Installation'),
     ),
-    h('p', { class: 'muted small center' }, 'Bok! – Kroatisch, Serbisch und Bosnisch lernen. Dein Lernstand bleibt auf diesem Gerät.'),
+    h('p', { class: 'muted small center' }, `Bok! ${VERSION} – Kroatisch, Serbisch und Bosnisch lernen. Dein Lernstand bleibt auf diesem Gerät.`),
   );
   return { title: 'Mehr', tab: 'more', el };
 }
@@ -136,12 +137,118 @@ async function importData(file) {
   }
 }
 
-export function settings() {
+/** Übersetzt das Ergebnis des Ton-Tests in einen Satz, mit dem man etwas anfangen kann. */
+function explainTest(r) {
+  if (r.mode === 'none') return ['bad', 'Dieser Browser bietet für Kroatisch keine Sprachausgabe an.'];
+  if (r.error === 'timeout') {
+    return ['bad', 'Das Gerät hat auf den Sprechauftrag nicht reagiert. Schließe die App vollständig und öffne sie neu.'];
+  }
+  if (r.error === 'interrupted') return ['', 'Der Test wurde unterbrochen – tippe noch einmal.'];
+  if (r.error) return ['bad', `Das Gerät meldet einen Fehler („${r.error}“). Schließe die App vollständig und öffne sie neu.`];
+  if (r.ms < 500) {
+    return ['bad', 'Die Ausgabe war sofort zu Ende. Für Kroatisch ist auf diesem Gerät offenbar keine Stimme vorhanden.'];
+  }
+  const seconds = (r.ms / 1000).toFixed(1).replace('.', ',');
+  return ['ok', `Das Gerät meldet: gesprochen (${seconds} s). Nichts gehört? Dann ist es stummgeschaltet oder zu leise.`
+    + (r.mode === 'lang' ? ' Klang es nach einer deutschen oder englischen Stimme, fehlt die kroatische Stimme.' : '')];
+}
+
+function diagnosticsText() {
+  const d = speechDiagnostics();
+  const t = d.lastTest;
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  return [
+    `Bok! ${VERSION}`,
+    `Gerät: ${navigator.userAgent}`,
+    `Als App installiert: ${standalone ? 'ja' : 'nein'}`,
+    `Sprachausgabe: ${d.supported ? 'vorhanden' : 'fehlt'}, Weg: ${d.mode}`,
+    `Stimmen gesamt: ${d.total}`,
+    `Kroatisch/Bosnisch/Serbisch: ${d.hr.join(', ') || 'keine gelistet'}`,
+    `Deutsch: ${d.de.join(', ') || 'keine gelistet'}`,
+    `Sprachen: ${d.languages.join(' ') || '–'}`,
+    `Tonkanal: ${d.audioSession ?? 'nicht steuerbar'}, Stummschaltung umgehen: ${store.settings.unmute ? 'an' : 'aus'}`,
+    t ? `Letzter Test: ${t.ok ? 'beendet' : 'nicht beendet'}, gestartet: ${t.started ? 'ja' : 'nein'}, Dauer: ${t.ms} ms, Fehler: ${t.error || 'keiner'}, Stimme: ${t.voice || 'vom System gewählt'}`
+      : 'Letzter Test: noch keiner',
+  ].join('\n');
+}
+
+function audioSection() {
+  const mode = speechMode('hr');
   const hrVoices = voicesFor('hr');
-  const status = speechStatus('hr');
+  const anyVoices = speechDiagnostics().total > 0;
+  const result = h('p', { class: 'test-result', role: 'status' });
+  const diag = h('pre', { class: 'diag-text' }, diagnosticsText());
+
+  async function runTest() {
+    result.className = 'test-result';
+    result.textContent = 'Spreche: „Dobar dan! Kako ste? Ja učim hrvatski.“';
+    const [kind, text] = explainTest(await testSpeech());
+    result.className = 'test-result ' + kind;
+    result.textContent = text;
+    diag.textContent = diagnosticsText();
+  }
+  async function copyDiagnostics() {
+    try {
+      await navigator.clipboard.writeText(diag.textContent);
+      toast('Diagnose kopiert');
+    } catch {
+      toast('Bitte den Text markieren und kopieren.');
+    }
+  }
+
+  return h('section', { class: 'card', id: 'audio' },
+    h('h3', null, 'Audio'),
+    h('p', { class: 'status ' + (mode === 'voice' ? 'yes' : '') },
+      mode === 'voice' ? `✓ Kroatische Stimme gefunden: ${hrVoices[0].name}.`
+        : mode === 'none' ? 'Auf diesem Gerät wurde keine kroatische, bosnische oder serbische Stimme gefunden.'
+          : anyVoices ? 'Dein Browser listet keine kroatische Stimme auf. Die App fordert Kroatisch deshalb direkt beim System an – das funktioniert, sobald dort eine kroatische Stimme geladen ist.'
+            : 'Der Browser hat noch keine Stimmen gemeldet. Die App fordert Kroatisch direkt beim System an.'),
+    h('div', { class: 'row gap wrap' },
+      h('button', { class: 'btn primary', onclick: runTest }, icon('speaker', 18), ' Ton testen'),
+      mode === 'none' && h('button', { class: 'btn ghost', onclick: () => { store.set('forceSpeech', true); refresh(); } }, 'Trotzdem versuchen'),
+    ),
+    result,
+
+    isIOS && h('div', { class: 'help' },
+      h('b', null, 'Kein Ton auf dem iPhone oder iPad?'),
+      h('ol', null,
+        h('li', null, h('b', null, 'Stummschaltung aus. '), 'Der Schalter an der Seite bzw. „Stumm“ im Kontrollzentrum schaltet auch die Sprachausgabe von Web-Apps ab. Die App versucht das zu umgehen – verlass dich aber nicht darauf.'),
+        h('li', null, h('b', null, 'Lauter stellen, '), 'während die App spricht.'),
+        h('li', null, h('b', null, 'Kroatische Stimme laden: '), 'Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Kroatisch. In der Liste der App taucht sie danach nicht auf; das ist bei iOS normal und kein Fehler.'),
+        h('li', null, h('b', null, 'App neu starten: '), 'vollständig schließen und wieder öffnen.'),
+      ),
+    ),
+    isIOS && row('Bei Stummschaltung sprechen', 'Spielt vor jeder Ausgabe einen lautlosen Ton, damit iOS die Stimme nicht stummschaltet. Unterbricht dabei Musik aus anderen Apps.', seg('unmute', [[true, 'an'], [false, 'aus']])),
+
+    hrVoices.length > 1 && row('Stimme', null,
+      h('select', { 'aria-label': 'Stimme', onchange: (e) => { store.set('voiceHr', e.target.value); runTest(); } },
+        hrVoices.map((v, i) => h('option', { value: v.voiceURI, selected: store.settings.voiceHr ? v.voiceURI === store.settings.voiceHr : i === 0 }, `${v.name} (${v.lang})`)))),
+    row('Sprechtempo', 'Für den Anfang etwas langsamer. Jede Aufgabe hat zusätzlich eine 🐢-Taste.',
+      seg('rate', [[0.7, 'langsam'], [0.9, 'normal'], [1, 'schnell']])),
+    row('Automatisch vorlesen', 'Kroatisch bei jeder Aufgabe von selbst abspielen.', seg('autoplay', [[true, 'an'], [false, 'aus']])),
+
+    !isIOS && mode !== 'voice' && h('div', { class: 'help' },
+      h('b', null, 'So richtest du eine kroatische Stimme ein'),
+      h('ul', null,
+        h('li', null, h('b', null, 'Windows: '), 'Am einfachsten die App in Microsoft Edge öffnen – Edge bringt kroatische Stimmen mit. Sonst: Einstellungen → Zeit und Sprache → Sprache → Stimmen hinzufügen → Kroatisch.'),
+        h('li', null, h('b', null, 'Mac: '), 'Systemeinstellungen → Bedienungshilfen → Gesprochene Inhalte → Systemstimme → Stimmen verwalten → Kroatisch.'),
+        h('li', null, h('b', null, 'Android: '), 'Einstellungen → Sprachausgabe → Sprachdaten installieren → Kroatisch.'),
+      ),
+      h('p', { class: 'muted small' }, 'Die Menünamen unterscheiden sich je nach Version etwas. Lade die App danach neu.'),
+    ),
+
+    h('details', { class: 'diag' },
+      h('summary', null, 'Diagnose für die Fehlersuche'),
+      h('p', { class: 'muted small' }, 'Erst „Ton testen“ antippen, dann diesen Text kopieren und weitergeben, falls etwas nicht funktioniert.'),
+      diag,
+      h('button', { class: 'btn ghost', onclick: copyDiagnostics }, 'Kopieren'),
+    ),
+  );
+}
+
+export function settings() {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   const fileInput = h('input', { type: 'file', accept: 'application/json,.json', hidden: true, onchange: (e) => importData(e.target.files[0]) });
-  const test = () => speak('Dobar dan! Kako ste? Ja učim hrvatski.');
 
   const el = h('div', { class: 'page settings' },
     h('section', { class: 'card' },
@@ -152,30 +259,7 @@ export function settings() {
       row('Behaltensquote', 'Wie sicher du ein Wort bei der Wiederholung noch wissen sollst. Höher bedeutet mehr Wiederholungen.', seg('retention', [[0.85, '85 %'], [0.9, '90 %'], [0.93, '93 %']])),
     ),
 
-    h('section', { class: 'card', id: 'audio' },
-      h('h3', null, 'Audio'),
-      h('p', { class: 'status ' + status },
-        status === 'yes' ? `✓ Kroatische Stimme gefunden (${hrVoices.length} verfügbar).`
-          : status === 'maybe' ? 'Der Browser hat noch keine Stimmen gemeldet. Tippe auf „Testen“.'
-            : 'Auf diesem Gerät wurde keine kroatische, bosnische oder serbische Stimme gefunden.'),
-      hrVoices.length > 0 && row('Stimme', null,
-        h('select', { 'aria-label': 'Stimme', onchange: (e) => { store.set('voiceHr', e.target.value); test(); } },
-          hrVoices.map((v, i) => h('option', { value: v.voiceURI, selected: store.settings.voiceHr ? v.voiceURI === store.settings.voiceHr : i === 0 }, `${v.name} (${v.lang})`)))),
-      row('Sprechtempo', 'Für den Anfang etwas langsamer. Jede Aufgabe hat zusätzlich eine 🐢-Taste.',
-        seg('rate', [[0.7, 'langsam'], [0.9, 'normal'], [1, 'schnell']])),
-      row('Automatisch vorlesen', 'Kroatisch bei jeder Aufgabe von selbst abspielen.', seg('autoplay', [[true, 'an'], [false, 'aus']])),
-      h('button', { class: 'btn ghost', onclick: test }, icon('speaker', 18), ' Testen'),
-      status !== 'yes' && h('div', { class: 'help' },
-        h('b', null, 'So richtest du eine Stimme ein'),
-        h('ul', null,
-          h('li', null, h('b', null, 'iPhone, iPad: '), 'Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Kroatisch. Dort lässt sich die Stimme „Lana“ laden.'),
-          h('li', null, h('b', null, 'Mac: '), 'Systemeinstellungen → Bedienungshilfen → Gesprochene Inhalte → Systemstimme → Stimmen verwalten → Kroatisch.'),
-          h('li', null, h('b', null, 'Windows: '), 'Am einfachsten die App in Microsoft Edge öffnen – Edge bringt kroatische Stimmen mit. Sonst: Einstellungen → Zeit und Sprache → Sprache → Stimmen hinzufügen → Kroatisch.'),
-          h('li', null, h('b', null, 'Android: '), 'Einstellungen → Sprachausgabe → Sprachdaten installieren → Kroatisch.'),
-        ),
-        h('p', { class: 'muted small' }, 'Die Menünamen unterscheiden sich je nach Version etwas. Lade die App danach neu.'),
-      ),
-    ),
+    audioSection(),
 
     h('section', { class: 'card' },
       h('h3', null, 'Darstellung'),

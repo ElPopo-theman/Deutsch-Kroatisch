@@ -8,6 +8,7 @@ import {
   learnSession, exerciseForCard, grammarEx, buildEx, canBuild, sameSentence, mcEx, typeEx,
 } from '../js/content.js';
 import { checkAnswer } from '../js/util.js';
+import { VERSION } from '../js/version.js';
 
 const unique = (list) => new Set(list).size === list.length;
 
@@ -137,6 +138,7 @@ test('Eine Lerneinheit stellt jedes Wort vor und fragt es mehrfach ab', () => {
 
 test('Service Worker kennt alle Dateien der App', async () => {
   const sw = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
+  assert.ok(sw.includes(`'bok-${VERSION}'`), 'Versionsnummer in sw.js und js/version.js stimmt nicht überein');
   const listed = [...sw.matchAll(/^\s+'([^']+)',$/gm)].map((m) => m[1]).filter((f) => f !== './');
   const root = new URL('../', import.meta.url);
   for (const file of listed) await assert.doesNotReject(readFile(new URL(file, root)), `${file} fehlt`);

@@ -2,19 +2,19 @@
 
 import { h, shuffle, sleep } from '../util.js';
 import { store } from '../store.js';
-import { speak, stopSpeaking, speechStatus, canSpeak, keepAwake } from '../speech.js';
+import { speak, stopSpeaking, speechMode, canSpeak, keepAwake } from '../speech.js';
 import { icon, toast } from '../ui.js';
 import { dialogues, dialogueById, units, unitById } from '../content.js';
 import { startQuiz, startShadowing, startPractice, learnedWords, isLearned } from '../learning.js';
 import { notFound } from './course.js';
 
 function voiceNotice() {
-  const status = speechStatus('hr');
-  if (status === 'yes') return null;
+  const mode = speechMode('hr');
+  if (mode === 'voice') return null;
   return h('a', { class: 'notice', href: '#/einstellungen' },
-    status === 'no'
+    mode === 'none'
       ? [h('b', null, 'Keine kroatische Stimme gefunden.'), ' Tippe hier für die Einrichtung.']
-      : [h('b', null, 'Audio wird vorbereitet.'), ' Wenn du nichts hörst, findest du hier Hilfe.']);
+      : [h('b', null, 'Kein Ton?'), ' Hier findest du einen Ton-Test und Hilfe.']);
 }
 
 export function audio() {
@@ -40,6 +40,7 @@ export function audio() {
         h('span', { class: 'chip' }, d.level),
         store.isDone('d:' + d.id) ? h('span', { class: 'done-mark', 'aria-label': 'erledigt' }, icon('check', 20)) : icon('chevron', 20),
       ))),
+    h('p', { class: 'muted small center' }, h('a', { href: '#/einstellungen' }, 'Kein Ton? Zum Ton-Test')),
   );
   return { title: 'Audio', tab: 'audio', el };
 }

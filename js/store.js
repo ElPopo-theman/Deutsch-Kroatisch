@@ -16,6 +16,8 @@ export const DEFAULT_SETTINGS = {
   voiceDe: '',
   theme: 'auto',       // auto | light | dark
   cyrillic: false,     // kyrillische Schreibweise einblenden
+  unmute: true,        // iPhone: auch bei Stummschaltung sprechen
+  forceSpeech: false,  // am Computer ohne gelistete kroatische Stimme trotzdem sprechen
 };
 
 function emptyState() {

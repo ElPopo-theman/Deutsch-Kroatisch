@@ -128,9 +128,24 @@ document.addEventListener('visibilitychange', () => {
 
 render();
 
+// Offline-Betrieb. Liegt eine neue Fassung der App bereit, lädt sich die Seite einmal neu –
+// aber nie mitten in einer Lernsitzung.
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   try {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    const hadWorker = Boolean(navigator.serviceWorker.controller);
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadWorker || reloading) return;
+      reloading = true;
+      const reload = () => location.reload();
+      if (sessionOpen()) window.addEventListener('session-closed', reload, { once: true });
+      else reload();
+    });
+    navigator.serviceWorker.register('./sw.js').then((registration) => {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') registration.update().catch(() => {});
+      });
+    }).catch(() => {});
   } catch { /* in eingebetteten Ansichten nicht erlaubt */ }
 }
 navigator.storage?.persist?.().catch(() => {});

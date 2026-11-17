@@ -13,25 +13,44 @@ const PORT = 8137;
 const BASE = `http://localhost:${PORT}/`;
 const OUT = process.env.SHOTS || '.screenshots';
 
-const fakeSpeech = () => {
+/** Ersetzt die Sprachausgabe des Browsers. voices: Liste der Stimmen, die er „auflistet“. */
+const fakeSpeech = (voices) => {
   window.__spoken = [];
+  window.__utterances = [];
   window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
-  const voices = [
-    { name: 'Lana', lang: 'hr-HR', voiceURI: 'lana' },
-    { name: 'Anna', lang: 'de-DE', voiceURI: 'anna' },
-  ];
   const synth = {
-    speaking: false, pending: false,
+    speaking: false, pending: false, paused: false,
     getVoices: () => voices,
-    speak(u) { if (u.text.trim()) window.__spoken.push(u.text); this.speaking = true; setTimeout(() => { this.speaking = false; u.onend?.(); }, 20); },
+    speak(u) {
+      if (u.text.trim()) {
+        window.__spoken.push(u.text);
+        window.__utterances.push({ text: u.text, lang: u.lang, voice: u.voice ? u.voice.name : null });
+      }
+      this.speaking = true;
+      u.onstart?.();
+      setTimeout(() => { this.speaking = false; u.onend?.(); }, 20);
+    },
     cancel() { this.speaking = false; },
+    resume() {},
     addEventListener() {},
   };
   Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true });
 };
 
+const WITH_CROATIAN = [
+  { name: 'Lana', lang: 'hr-HR', voiceURI: 'lana' },
+  { name: 'Anna', lang: 'de-DE', voiceURI: 'anna' },
+];
+const WITHOUT_CROATIAN = [
+  { name: 'Anna', lang: 'de-DE', voiceURI: 'anna' },
+  { name: 'Samantha', lang: 'en-US', voiceURI: 'samantha' },
+];
+const IPHONE_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1';
+
 /** Löst die gerade angezeigte Aufgabe; mit wrong = true absichtlich falsch. */
 async function solve(page, { wrong = false } = {}) {
+  // Höraufgaben: abwarten, bis der neue Text gesprochen ist (nach einem Abbruch startet er leicht verzögert).
+  if (await page.locator('.s-body .prompt .listen').count() && !(await page.locator('.s-foot.fb').count())) await page.waitForTimeout(260);
   return page.evaluate(async (answerWrong) => {
     const { words, grammarItemById, dialogues } = await import('/js/content.js');
     const norm = (s) => s.replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
@@ -101,7 +120,7 @@ async function finishSession(page, { firstWrong = false } = {}) {
 async function run(name, contextOptions) {
   const browser = await chromium.launch();
   const context = await browser.newContext({ locale: 'de-DE', ...contextOptions });
-  await context.addInitScript(fakeSpeech);
+  await context.addInitScript(fakeSpeech, WITH_CROATIAN);
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -229,12 +248,93 @@ async function run(name, contextOptions) {
   console.log(`✓ ${name}`);
 }
 
+/**
+ * Der Browser listet keine kroatische Stimme auf – so verhält sich Safari auf dem iPhone, wenn die Stimme
+ * nachgeladen wurde. Auf dem iPhone muss die App trotzdem sprechen (nur über die Sprachangabe),
+ * am Computer erst nach „Trotzdem versuchen“.
+ */
+async function withoutListedVoice() {
+  const browser = await chromium.launch();
+
+  // iPhone
+  let context = await browser.newContext({ locale: 'de-DE', userAgent: IPHONE_AGENT, viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await context.addInitScript(fakeSpeech, WITHOUT_CROATIAN);
+  let page = await context.newPage();
+  await page.goto(BASE);
+  await page.waitForSelector('.hero');
+  assert.equal(await page.locator('.notice').count(), 0, 'iPhone: kein Hinweis „keine Stimme“');
+  await page.locator('.cta.learn').click();
+  await page.waitForSelector('.ex.intro');
+  let said = await page.evaluate(() => window.__utterances.at(-1));
+  assert.deepEqual(said, { text: 'bok', lang: 'hr-HR', voice: null }, 'iPhone: spricht über die Sprachangabe');
+  await page.locator('.s-head .icon-btn').click();
+  await page.goto(BASE + '#/einstellungen');
+  await page.waitForSelector('#audio');
+  await page.locator('#audio .btn.primary').click();
+  await page.waitForSelector('.test-result.ok, .test-result.bad');
+  await page.locator('.diag summary').click();
+  const diagnosis = await page.locator('.diag-text').innerText();
+  assert.match(diagnosis, /Weg: lang/);
+  assert.match(diagnosis, /Letzter Test: beendet, gestartet: ja/);
+  assert.equal(await page.locator('#audio .help ol li').count(), 4, 'iPhone: Hilfe bei fehlendem Ton');
+  await page.screenshot({ path: `${OUT}/iphone-23-ton-test.png`, fullPage: true });
+  await context.close();
+
+  // Computer
+  context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1280, height: 860 } });
+  await context.addInitScript(fakeSpeech, WITHOUT_CROATIAN);
+  page = await context.newPage();
+  await page.goto(BASE);
+  await page.waitForSelector('.hero');
+  assert.equal(await page.locator('.notice').count(), 1, 'Computer: Hinweis auf die fehlende Stimme');
+  await page.goto(BASE + '#/einstellungen');
+  await page.locator('.btn', { hasText: 'Trotzdem versuchen' }).click();
+  await page.locator('#audio .btn.primary').click();
+  await page.waitForFunction(() => window.__utterances.length > 0);
+  said = await page.evaluate(() => window.__utterances.at(-1));
+  assert.equal(said.lang, 'hr-HR');
+  assert.equal(said.voice, null);
+  await browser.close();
+  console.log('✓ ohne gelistete Stimme');
+}
+
+/** Tippt man weiter, während noch gesprochen wird, darf die neue Ausgabe nicht verloren gehen. */
+async function interruptedSpeech() {
+  const browser = await chromium.launch();
+  const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 390, height: 844 } });
+  await context.addInitScript(fakeSpeech, WITH_CROATIAN);
+  const page = await context.newPage();
+  await page.goto(BASE + '#/grammatik/g05');
+  await page.waitForSelector('.say');
+  await page.evaluate(() => {
+    // Diese Attrappe spricht lange und verschluckt – wie Safari – alles, was direkt nach einem Abbruch kommt.
+    const synth = window.speechSynthesis;
+    let cancelled = 0;
+    synth.speak = function (u) {
+      if (Date.now() - cancelled < 100) return;
+      window.__spoken.push(u.text);
+      this.speaking = true;
+      u.onstart?.();
+    };
+    synth.cancel = function () { if (this.speaking) cancelled = Date.now(); this.speaking = false; };
+  });
+  const examples = page.locator('.exl .say');
+  await examples.nth(0).click();
+  await examples.nth(1).click();
+  await page.waitForFunction(() => window.__spoken.length === 2, null, { timeout: 3000 });
+  assert.deepEqual(await page.evaluate(() => window.__spoken), ['Pijem kavu.', 'Imam brata i sestru.']);
+  await browser.close();
+  console.log('✓ Unterbrechen und neu sprechen');
+}
+
 await mkdir(OUT, { recursive: true });
 const server = spawn(process.execPath, ['tools/serve.mjs'], { env: { ...process.env, PORT }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 try {
   await run('iphone', { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await run('desktop', { viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2 });
+  await withoutListedVoice();
+  await interruptedSpeech();
 } finally {
   server.kill();
 }

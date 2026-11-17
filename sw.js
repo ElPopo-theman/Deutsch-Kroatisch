@@ -1,9 +1,9 @@
 // Service Worker: macht die App offline nutzbar.
 // Alle Dateien werden beim ersten Besuch gespeichert und danach sofort aus dem Speicher geliefert;
 // im Hintergrund wird nach neuen Fassungen gesucht, die beim nächsten Start aktiv sind.
-// Bei Änderungen an der Dateiliste die Versionsnummer erhöhen.
+// Bei jeder Veröffentlichung die Versionsnummer erhöhen (gleicher Wert wie in js/version.js).
 
-const VERSION = 'bok-v1';
+const VERSION = 'bok-1.1.0';
 
 const FILES = [
   './',
@@ -19,6 +19,7 @@ const FILES = [
   'js/store.js',
   'js/ui.js',
   'js/util.js',
+  'js/version.js',
   'js/data/vocab.js',
   'js/data/grammar.js',
   'js/data/dialogues.js',
@@ -36,7 +37,9 @@ const FILES = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache: 'reload' holt jede Datei frisch vom Server statt aus dem Zwischenspeicher des Browsers.
+  const fresh = FILES.map((file) => new Request(file, { cache: 'reload' }));
+  event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(fresh)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {

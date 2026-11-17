@@ -37,10 +37,17 @@ Danach auf dem jeweiligen Gerät:
 
 ### Ton
 
-Die App spricht mit den Stimmen des Geräts. iPhone, iPad, Mac und Android bringen eine kroatische Stimme mit;
-unter Windows ist **Microsoft Edge** die einfachste Wahl, weil Edge kroatische Stimmen eingebaut hat. Fehlt eine Stimme,
-erklärt die App unter *Mehr → Einstellungen → Audio*, wie man sie einrichtet – alle Aufgaben außer den reinen Höraufgaben
-funktionieren auch ohne Ton.
+Die App spricht mit den Stimmen des Geräts. Unter *Mehr → Einstellungen → Audio* gibt es einen **Ton-Test**, der sagt,
+woran es liegt, wenn nichts zu hören ist, und eine Diagnose zum Kopieren.
+
+- **iPhone / iPad:** Safari listet nur fest eingebaute Stimmen auf; eine nachgeladene kroatische Stimme erscheint dort
+  nicht, wird aber trotzdem verwendet. Voraussetzung: Unter *Einstellungen → Bedienungshilfen → Gesprochene Inhalte →
+  Stimmen → Kroatisch* ist eine Stimme geladen. Bei **stummgeschaltetem Gerät** schweigt die Sprachausgabe von Web-Apps;
+  die App versucht das zu umgehen, zuverlässig ist aber nur: Stummschaltung aus.
+- **Windows:** **Microsoft Edge** ist die einfachste Wahl, weil Edge kroatische Stimmen eingebaut hat.
+- **Mac, Android:** kroatische Stimme in den Systemeinstellungen laden.
+
+Alle Aufgaben außer den reinen Höraufgaben funktionieren auch ohne Ton.
 
 ### Lernstand zwischen iPhone und Computer übertragen
 
@@ -108,7 +115,7 @@ npm run icons  # App-Symbole neu erzeugen (benötigt Playwright)
 | `js/speech.js` | Sprachausgabe und Aufnahme |
 | `js/store.js` | Lernstand und Einstellungen (localStorage) |
 | `js/views/` | die einzelnen Seiten |
-| `sw.js` | Offline-Betrieb; bei neuen Dateien die Liste ergänzen und `VERSION` erhöhen |
+| `sw.js`, `js/version.js` | Offline-Betrieb und Versionsnummer; bei jeder Veröffentlichung beide Nummern erhöhen, damit installierte Apps die neue Fassung laden |
 
 ### Inhalte erweitern
 

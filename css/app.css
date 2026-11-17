@@ -624,7 +624,27 @@ select {
 .status { padding: 10px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--warn-ink); }
 .status.yes { background: var(--good-soft); color: var(--good); font-weight: 600; }
 .help { padding: 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
-.help ul, .plain { margin: 8px 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+.help ul, .help ol, .plain { margin: 8px 0 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+.test-result { min-height: 1.5em; color: var(--ink-2); }
+.test-result:empty { display: none; }
+.test-result.ok, .test-result.bad { padding: 10px 14px; border-radius: 12px; }
+.test-result.ok { background: var(--good-soft); color: var(--ink); }
+.test-result.bad { background: var(--bad-soft); color: var(--ink); }
+.diag { padding-top: 12px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 0.9rem; }
+.diag summary { cursor: pointer; font-weight: 600; }
+.diag-text {
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font: 0.78rem/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: all;
+  -webkit-user-select: all;
+}
 .meters { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .meters a { display: flex; justify-content: space-between; gap: 12px; color: var(--ink); text-decoration: none; font-size: 0.95rem; }
 

@@ -2,7 +2,7 @@
 
 import { h, dayNumber, formatDay } from '../util.js';
 import { store } from '../store.js';
-import { speak, speechStatus } from '../speech.js';
+import { speak, speechMode } from '../speech.js';
 import { icon, ring, audioButton } from '../ui.js';
 import { summaryStats, nextStep, describeStep, startLearn, startReview } from '../learning.js';
 import { TIPS } from '../data/dialogues.js';
@@ -45,7 +45,7 @@ export function home() {
       h('div', { class: 'tile-stat' }, h('b', null, s.due), h('span', null, 'heute fällig')),
     ),
 
-    speechStatus('hr') === 'no' && h('a', { class: 'notice', href: '#/einstellungen' },
+    speechMode('hr') === 'none' && h('a', { class: 'notice', href: '#/einstellungen' },
       h('b', null, 'Keine kroatische Stimme gefunden.'), ' Tippe hier, um das Audio einzurichten.'),
 
     s.due > 0 && h('button', { class: 'cta review', onclick: startReview },
@@ -69,7 +69,7 @@ export function home() {
       ),
       h('div', { class: 'row gap' },
         audioButton('Dobro došli! Učimo hrvatski.'),
-        h('span', { class: 'muted' }, 'Ton testen – hörst du Kroatisch?'),
+        h('span', { class: 'muted' }, 'Ton testen – hörst du Kroatisch? ', h('a', { href: '#/einstellungen' }, 'Kein Ton?')),
       ),
     ),
 
